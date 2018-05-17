@@ -69,8 +69,10 @@ Spotify.savePlaylist(trackURIs).then(trackURIs => {this.setState(this.trackURIs:
 }
 
 search(term){
-let searchResults = this.state.searchResults;
-Spotify.search(term).then(tracks => {this.setState({searchResults});})
+Spotify.search(term)
+.then(tracks => {this.setState({searchResults:tracks})
+				;}
+	 )
 }
 
   render(){
@@ -80,7 +82,7 @@ Spotify.search(term).then(tracks => {this.setState({searchResults});})
   <div className="App">
   <SearchBar onSearch={this.search} />
     <div className="App-playlist">
-<SearchResults searchResults={this.state.track} onAdd={this.addTrack}/>
+<SearchResults searchResults={this.state.searchResults} onAdd={this.addTrack}/>
 <PlayList playListName ={this.state.playlistName}
           playListTracks={this.state.playlistTracks}
           onRemove={this.removeTrack}
