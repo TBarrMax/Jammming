@@ -18,11 +18,12 @@ class App extends Component {
   ],*/
   searchResults:[],
   playlistName:'AnyString',
-  playlistTracks:[
+  playlistTracks:[]
+ /* playlistTracks:[
 {name:'Test10n',artist:'test10ar',album:'test10al', id:'900010i', uri:'spotify:track:6rqhFgbbKwnb9MLmUQDhD6'},
 {name:'Test20n', artist:'test20ar',album:'test20al', id:'900020i', uri:'spotify:track:6rqhFgbbKwnb9MLmUQDhE6'},
 {name:'Test30n', artist:'test30ar',album:'test30al', id:'900030i', uri:'spotify:track:6rqhFgbbKwnb9MLmUQDhF6'}
-]
+]*/
   };
   this.search = this.search.bind(this);
   this.addTrack = this.addTrack.bind(this);
@@ -61,18 +62,23 @@ updatePlaylistName(name){
 }
 
 savePlaylist(){
-/*let playlistTracks = this.state.playlistTracks;
-const trackURIs = playlistTracks.map(uri => uri.uri);
-console.log(trackURIs);*/
-Spotify.savePlaylist(trackURIs).then(trackURIs => {this.setState(this.trackURIs:trackURIs)});
-//console.log(trackURIs);
+const URIs = this.state.playlistTracks.map(uri => uri.URI);
+const listname = this.state.playlistName;
+console.log(URIs);
+console.log(listname)
+Spotify.savePlaylist(listname,URIs);
+this.setState({playlistName:'New Playlist'});
+this.setState({playlistTracks:[]});
+
+
+//Spotify.savePlaylist(trackURIs).then(trackURIs => {this.setState(this.trackURIs:trackURIs)});
 }
 
 search(term){
 Spotify.search(term)
 .then(tracks => {this.setState({searchResults:tracks})
 				;}
-	 )
+	 );
 }
 
   render(){
