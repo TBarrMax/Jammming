@@ -1,6 +1,7 @@
 let userAccessToken = null;
-const redirectURI= 'http://localhost:3000';
-const clientID='306d5e7a66814bd9829ecbbc3f143366';
+const redirectURI = 'http://localhost:3000';
+const clientID ='306d5e7a66814bd9829ecbbc3f143366';
+const scope = 'user-read-private user-read-email playlist-modify-public playlist-modify-private'
 
  const Spotify = {
 
@@ -19,65 +20,79 @@ if(urlexpireTime===true && urlToken===true){
    window.setTimeout(() => userAccessToken = '', expireTime * 1000);
    window.history.pushState('Access Token', null, '/');}
   else if(userAccessToken===null && urlToken===false)
-  {window.location = `https://accounts.spotify.com/authorize?client_id=${clientID}&redirect_uri=${redirectURI}&scope=user-read-private%20user-read-email&response_type=token&state=123`;}
+  {window.location = `https://accounts.spotify.com/authorize?client_id=${clientID}&redirect_uri=${redirectURI}&scope=${scope}&response_type=token`;}
     },
 
 search(term){
- if(userAccessToken!==null)
-{ return fetch (`https://api.spotify.com/v1/search?type=track&q=${term}`,
+this.getAccessToken();
+ return fetch (`https://api.spotify.com/v1/search?type=track&q=${term}`,
  {headers:{
-  Authorization:`Bearer ${userAccessToken}`}})
-   .then(response => response.json())
-    .then(response => {console.log(response);})
- .then(response => 
- 				{if(response.tracks.items)
- 					{console.log(response.tracks.items.map(track => (
-						 {id:track.id,name:track.name,
-						 artist:track.artists[0].name,
-						 album:track.album.name,
-						 URI:track.uri})))}})
- .then (response => {return response.tracks.items.map(track => ({id:track.id,name:track.name,artist:track.artists[0].name,album:track.album.name,URI:track.uri}
- ))})}
- else {this.getAccessToken()}
+  Authorization:`Bearer ${userAccessToken}`}
+  })
+.then(response => {
+   if (response.ok) {
+   return response.json();
+   } throw new Error('Request Failed!');
+    }, networkError => console.log(networkError.message))
+.then(jsonResponse => {
+  if(jsonResponse.tracks){
+ 	return jsonResponse.tracks.items.map(track => (
+			{id:track.id,
+			 name:track.name,
+			 artist:track.artists[0].name,
+			 album:track.album.name,
+			 URI:track.uri}
+));}else {return [];}
+}
+)
 },
 
 
-savePlaylist(playlistName,trackURIs){
-if (userAccessToken===null){this.getAccessToken()}
-  else if (!playlistName || !trackURIs){return}
-  else {
-    let headers = {headers:{Authorization:`Bearer ${userAccessToken}`}};
-    let usersId;
-    let playlistID;
-    return fetch(`https://api.spotify.com/v1/me`,
-      {headers:{headers},method:'GET'})
-      .then(response => response.json())
-      .then(jsonResponse => {
-        if(jsonResponse.id){
-          let usersId = jsonResponse.id}
-        })
-  .then (fetch(`https://api.spotify.com/v1/users/${usersId}/playlists`,
-       {method:'POST',
-        headers:{
-        Authorization:`Bearer ${userAccessToken}`,
-      	Content_type: "application/json"
-                },
-        body:JSON.stringify(playlistName)
-      }))
- .then(response => {return response.json();})
- .then(jsonResponse=>{
- if(jsonResponse.id){let playlistID = jsonResponse.id}})
- .then (fetch(`https://api.spotify.com/v1/users/${usersId}/playlists/${playlistID}/tracks`,
-       {method:'POST',
-        headers:{
-     	 Authorization:`Bearer ${userAccessToken}`,
-      	 Content_type: "application/json"},
-    	 body:JSON.stringify(trackURIs)}))
- .then(response => {return response.json();})
- .then(jsonResponse=>{
-   if(jsonResponse.id)
-   { let playlistID = jsonResponse.id;}});
-    }}
-};
+
+
+ savePlaylist(listname, URIs){
+    this.getAccessToken();
+    let user_id
+    let playlist_id
+    if (listname && URIs)
+    {console.log(listname);
+      return fetch('https://api.spotify.com/v1/me', {
+        headers: {Authorization: `Bearer ${userAccessToken}`}})
+     .then(response => {
+        if (response.ok) {return response.json();}
+        throw new Error('Request Failed!');},
+        networkError => console.log(networkError.message))
+     .then(jsonResponse => {
+        return user_id = jsonResponse.id; })
+     .then(()=> {
+        return fetch(`https://api.spotify.com/v1/users/${user_id}/playlists`, {
+          headers: {Authorization: `Bearer ${userAccessToken}`},
+          method: 'POST',
+          body: JSON.stringify({name: listname})})
+      .then(response => {
+          if (response.ok) {return response.json();}
+          throw new Error('Request Failed!');},
+         networkError => console.log(networkError.message))
+      .then(jsonResponse => {return playlist_id = jsonResponse.id;});})
+      .then(()=> {
+        return fetch(`https://api.spotify.com/v1/users/${user_id}/playlists/${playlist_id}/tracks`, {
+          headers: {Authorization: `Bearer ${userAccessToken}`,'content-type':'application/json'},
+          method: 'POST',
+          body: JSON.stringify({uris: URIs})})
+      .then(response => {
+          if (response.ok) {
+           return response.json();
+          }throw new Error('Request Failed!');
+        }, networkError => console.log(networkError.message)
+        ).then(jsonResponse => {
+        });
+      });
+    } else {return;
+      //console.log(listname);
+    }
+  }
+
+ }
+
 
 export default Spotify;
